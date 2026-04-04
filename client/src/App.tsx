@@ -1,121 +1,111 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "./store";
+import { fetchMe, logout } from "./store/authSlice";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Profile from "./pages/Profile";
+import UpdateProfile from "./pages/UpdateProfile";
 
-function App() {
-  const [count, setCount] = useState(0)
+const Navbar = () => {
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((s) => s.auth.user);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-purple-100 shadow-sm">
+      <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+        {/* Logo */}
+        <Link to={user ? "/profile" : "/"} className="flex items-center gap-2">
+          <span className="text-2xl">🐾</span>
+          <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-violet-500 bg-clip-text text-transparent">
+            Seezoo
+          </span>
+        </Link>
 
-      <div className="ticks"></div>
+        {/* Nav actions */}
+        <div className="flex items-center gap-3">
+          {user ? (
+            <>
+              {/* Avatar chip */}
+              <Link
+                to="/profile"
+                className="hidden sm:flex items-center gap-2 bg-purple-50 hover:bg-purple-100 rounded-full px-3 py-1.5 transition-colors"
+              >
+                <div className="w-6 h-6 rounded-full overflow-hidden bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                  {user.profileImage
+                    ? <img src={user.profileImage} alt="" className="w-full h-full object-cover" />
+                    : user.name.charAt(0).toUpperCase()
+                  }
+                </div>
+                <span className="text-sm text-purple-700 font-medium">@{user.username}</span>
+              </Link>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+              <Link
+                to="/profile"
+                className="sm:hidden text-sm font-medium text-purple-600 hover:text-purple-800 px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-colors"
+              >
+                Profile
+              </Link>
+
+              <button
+                onClick={() => dispatch(logout())}
+                className="text-sm font-medium text-red-500 hover:text-red-700 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors px-3 py-1.5"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="text-sm font-semibold bg-gradient-to-r from-purple-600 to-violet-500 text-white px-4 py-2 rounded-xl hover:opacity-90 transition-opacity shadow-sm"
+              >
+                Join Free
+              </Link>
+            </>
+          )}
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      </div>
+    </nav>
+  );
+};
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
-}
+const App = () => {
+  const dispatch = useAppDispatch();
 
-export default App
+  useEffect(() => {
+    dispatch(fetchMe());
+  }, [dispatch]);
+
+  return (
+    <BrowserRouter>
+      <Navbar />
+      <main className="flex-1">
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <UpdateProfile />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </main>
+    </BrowserRouter>
+  );
+};
+
+export default App;
