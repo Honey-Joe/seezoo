@@ -5,6 +5,8 @@ import cors from "cors";
 import connectDB from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
+import postRoutes from "./routes/postRoutes";
+import lostFoundRoutes from "./routes/lostFoundRoutes";
 
 connectDB();
 
@@ -21,6 +23,8 @@ app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/posts", postRoutes);
+app.use("/api/lost-found", lostFoundRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

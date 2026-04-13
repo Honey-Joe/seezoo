@@ -5,8 +5,13 @@ import { fetchMe, logout } from "./store/authSlice";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Landing from "./pages/Landing";
 import Profile from "./pages/Profile";
 import UpdateProfile from "./pages/UpdateProfile";
+import NewPost from "./pages/NewPost";
+import LostFound from "./pages/LostFound";
+import NewLostFound from "./pages/NewLostFound";
+import LostFoundSeeAll from "./pages/LostFoundSeeAll";
 
 const Navbar = () => {
   const dispatch = useAppDispatch();
@@ -34,9 +39,9 @@ const Navbar = () => {
               >
                 <div className="w-6 h-6 rounded-full overflow-hidden bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                   {user.profileImage
-                    ? <img src={user.profileImage} alt="" className="w-full h-full object-cover" />
-                    : user.name.charAt(0).toUpperCase()
-                  }
+  ? <img src={user.profileImage} alt="" className="w-full h-full object-cover" />
+  : user.name?.charAt(0).toUpperCase()
+}
                 </div>
                 <span className="text-sm text-purple-700 font-medium">@{user.username}</span>
               </Link>
@@ -46,6 +51,14 @@ const Navbar = () => {
                 className="sm:hidden text-sm font-medium text-purple-600 hover:text-purple-800 px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-colors"
               >
                 Profile
+              </Link>
+
+              {/* Lost & Found link */}
+              <Link
+                to="/lost-found"
+                className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-amber-600 hover:text-amber-700 px-3 py-1.5 rounded-lg hover:bg-amber-50 transition-colors"
+              >
+                🔍 Lost & Found
               </Link>
 
               <button
@@ -89,7 +102,7 @@ const App = () => {
       <Navbar />
       <main className="flex-1">
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={
@@ -102,6 +115,18 @@ const App = () => {
               <UpdateProfile />
             </ProtectedRoute>
           } />
+          <Route path="/new-post" element={
+            <ProtectedRoute>
+              <NewPost />
+            </ProtectedRoute>
+          } />
+          <Route path="/lost-found" element={<LostFound />} />
+          <Route path="/new-lost-found" element={
+            <ProtectedRoute>
+              <NewLostFound />
+            </ProtectedRoute>
+          } />
+          <Route path="/lost-found-seeall" element={<LostFoundSeeAll />} />
         </Routes>
       </main>
     </BrowserRouter>
