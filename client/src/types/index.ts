@@ -19,10 +19,22 @@ export interface IUser {
   followers: string[];
   following: string[];
   isPrivate: boolean;
+  isEmailVerified: boolean;
+  authProvider: "local" | "google";
   createdAt: string;
 }
 
-export interface AuthResponse extends IUser {}
+export interface AuthResponse extends IUser {
+  isNewUser?: boolean;
+}
+
+/** Returned when Google sign-in reveals a new user who still needs a username */
+export interface GooglePendingData {
+  pendingGoogle: true;
+  email: string;
+  name: string;
+  picture: string;
+}
 
 export interface ApiError {
   message: string;

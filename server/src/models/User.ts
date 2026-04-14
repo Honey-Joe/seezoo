@@ -14,7 +14,10 @@ export interface IUser extends Document {
   name: string;
   username: string;
   email: string;
-  password: string;
+  password?: string;           // optional — Google users have no password
+  googleId?: string;           // Google UID stored for reference
+  authProvider: "local" | "google";
+  isEmailVerified: boolean;
   profileImage?: string;
   bio?: string;
   pets: IPet[];
@@ -44,9 +47,31 @@ const petSchema = new Schema<IPet>(
 const userSchema = new Schema<IUser>(
   {
     name: { type: String, required: true, trim: true },
-    username: { type: String, required: true, unique: true, lowercase: true, trim: true, minlength: 3, maxlength: 30 },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, minlength: 6 },
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      minlength: 3,
+      maxlength: 30,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    // password is optional — not set for Google users
+    password: { type: String, minlength: 6 },
+    googleId: { type: String, sparse: true },
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+    isEmailVerified: { type: Boolean, default: false },
     profileImage: { type: String },
     bio: { type: String, maxlength: 300 },
     pets: { type: [petSchema], default: [] },
@@ -57,12 +82,14 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
+// Only hash password if it was set/modified
 userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
+  if (!this.password || !this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 12);
 });
 
 userSchema.methods.comparePassword = function (candidate: string): Promise<boolean> {
+  if (!this.password) return Promise.resolve(false);
   return bcrypt.compare(candidate, this.password);
 };
 

@@ -12,6 +12,8 @@ import NewPost from "./pages/NewPost";
 import LostFound from "./pages/LostFound";
 import NewLostFound from "./pages/NewLostFound";
 import LostFoundSeeAll from "./pages/LostFoundSeeAll";
+import SetupUsername from "./pages/SetupUsername";
+import VerifyEmail from "./pages/VerifyEmail";
 
 const Navbar = () => {
   const dispatch = useAppDispatch();
@@ -127,6 +129,8 @@ const App = () => {
             </ProtectedRoute>
           } />
           <Route path="/lost-found-seeall" element={<LostFoundSeeAll />} />
+          <Route path="/setup-username" element={<SetupUsername />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
         </Routes>
       </main>
     </BrowserRouter>
