@@ -1,4 +1,12 @@
-import { signInWithPopup, createUserWithEmailAndPassword, sendEmailVerification, signOut, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  signInWithPopup,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signOut,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  confirmPasswordReset,
+} from "firebase/auth";
 import { auth, googleProvider } from "../lib/firebase";
 import api from "./api";
 import type { AuthResponse } from "../types";
@@ -119,3 +127,46 @@ export const completeGoogleSignup = async (
     ...(password ? { password } : {}),
   });
 };
+
+// ─── Password Reset helpers ───────────────────────────────────────────────────
+
+/**
+ * Sends a Firebase password reset email.
+ * The reset link will redirect to /reset-password after the user sets a new password
+ * (requires Firebase Console → Authentication → Templates → action URL to be set).
+ */
+export const sendForgotPasswordEmail = async (email: string) => {
+  await sendPasswordResetEmail(auth, email, {
+    url: `${window.location.origin}/reset-password`,
+    handleCodeInApp: false,
+  });
+};
+
+/**
+ * Completes a Firebase password reset using the oobCode from the email link.
+ * Then signs in with the new password to get a Firebase token, and syncs to MongoDB.
+ */
+export const confirmFirebasePasswordReset = async (
+  oobCode: string,
+  email: string,
+  newPassword: string
+) => {
+  // 1. Let Firebase update its own password record
+  await confirmPasswordReset(auth, oobCode, newPassword);
+
+  // 2. Sign in with new password to get a Firebase ID token
+  const credential = await signInWithEmailAndPassword(auth, email, newPassword);
+  const firebaseToken = await credential.user.getIdToken();
+  await signOut(auth); // we'll use our own JWT from the server
+
+  // 3. Sync new password to MongoDB + get our JWT
+  return api.post<{ message: string; user: AuthResponse }>("/auth/password-reset-sync", {
+    firebaseToken,
+    newPassword,
+  });
+};
+
+/** Change password for a currently logged-in user (hits protected endpoint). */
+export const changePasswordOnServer = (currentPassword: string | undefined, newPassword: string) =>
+  api.patch<{ message: string }>("/auth/change-password", { currentPassword, newPassword });
+

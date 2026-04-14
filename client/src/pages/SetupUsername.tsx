@@ -19,7 +19,7 @@ const SetupUsername = () => {
   const state = location.state as LocationState | null;
 
   const [username, setUsername] = useState("");
-  const [name, setName] = useState(state?.name ?? "");
+  const [name, setName] = useState("");           // user types their own name
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -81,17 +81,11 @@ const SetupUsername = () => {
 
           {/* Top banner */}
           <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-fuchsia-600 px-8 pt-8 pb-10 text-center text-white">
-            {state.picture ? (
-              <img
-                src={state.picture} alt={state.name}
-                className="w-20 h-20 rounded-full border-4 border-white/30 mx-auto mb-4 object-cover shadow-lg"
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-white/20 border-4 border-white/30 mx-auto mb-4 flex items-center justify-center text-3xl font-bold">
-                {state.name?.charAt(0).toUpperCase() || "U"}
-              </div>
-            )}
-            <h1 className="text-xl font-bold">Almost there, {state.name?.split(" ")[0]}! 🐾</h1>
+            {/* Generic avatar — user sets their photo in settings later */}
+            <div className="w-20 h-20 rounded-full bg-white/20 border-4 border-white/30 mx-auto mb-4 flex items-center justify-center text-4xl">
+              🐾
+            </div>
+            <h1 className="text-xl font-bold">Almost there! 🐾</h1>
             <p className="text-purple-200 text-sm mt-1">{state.email}</p>
           </div>
 

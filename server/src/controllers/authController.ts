@@ -325,7 +325,7 @@ export const googleComplete = async (req: Request, res: Response): Promise<void>
       googleId,
       authProvider: "google",
       isEmailVerified: true,
-      profileImage: picture || undefined,
+      // profileImage intentionally NOT set — user uploads their own photo from settings
       ...(password ? { password } : {}),
     });
 
@@ -345,3 +345,97 @@ export const googleComplete = async (req: Request, res: Response): Promise<void>
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// ─── Change Password (logged-in users) ────────────────────────────────────────
+
+/**
+ * PATCH /api/auth/change-password  (protected)
+ * Verifies current password (if set), then updates MongoDB with new hashed password.
+ */
+export const changePassword = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { currentPassword, newPassword } = req.body as {
+      currentPassword?: string;
+      newPassword: string;
+    };
+
+    if (!newPassword || newPassword.length < 6) {
+      res.status(400).json({ message: "New password must be at least 6 characters" });
+      return;
+    }
+
+    const user = await User.findById(req.user?._id);
+    if (!user) { res.status(404).json({ message: "User not found" }); return; }
+
+    // If user already has a password, verify current one
+    if (user.password) {
+      if (!currentPassword) {
+        res.status(400).json({ message: "Current password is required" });
+        return;
+      }
+      const valid = await user.comparePassword(currentPassword);
+      if (!valid) {
+        res.status(401).json({ message: "Current password is incorrect" });
+        return;
+      }
+    }
+
+    user.password = newPassword;
+    await user.save(); // pre-save hook hashes it
+    res.json({ message: "Password updated successfully" });
+  } catch (err) {
+    console.error("Change password error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/**
+ * POST /api/auth/password-reset-sync  (no JWT needed)
+ * Called after Firebase password reset completes — syncs new password hash to MongoDB.
+ * Requires a valid Firebase ID token (proves the user just authenticated with new password).
+ */
+export const passwordResetSync = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { firebaseToken, newPassword } = req.body as {
+      firebaseToken: string;
+      newPassword: string;
+    };
+
+    if (!firebaseToken || !newPassword || newPassword.length < 6) {
+      res.status(400).json({ message: "Firebase token and new password (min 6 chars) are required" });
+      return;
+    }
+
+    let decoded: admin.auth.DecodedIdToken;
+    try {
+      decoded = await admin.auth().verifyIdToken(firebaseToken);
+    } catch {
+      res.status(401).json({ message: "Invalid or expired token. Please request a new reset link." });
+      return;
+    }
+
+    const email = decoded.email?.toLowerCase().trim();
+    if (!email) { res.status(400).json({ message: "Could not read email from token" }); return; }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      res.status(404).json({ message: "No account found with this email" });
+      return;
+    }
+
+    user.password = newPassword;
+    user.isEmailVerified = true; // email was verified via Firebase
+    await user.save();
+
+    // Issue JWT so user is logged in right after reset
+    const token = signToken(user._id.toString());
+    res.cookie("token", token, cookieOptions).json({
+      message: "Password reset successful",
+      user: userPublicFields(user),
+    });
+  } catch (err) {
+    console.error("Password reset sync error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+

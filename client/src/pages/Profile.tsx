@@ -96,10 +96,20 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Member since */}
-        <p className="text-xs text-gray-400 mb-6">
-          🗓 Member since {new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-        </p>
+        {/* Member since + quick actions row */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <p className="text-xs text-gray-400">
+            🗓 Member since {new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+          </p>
+
+          {/* Change Password shortcut */}
+          <Link
+            to="/change-password"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-1.5 rounded-xl transition-colors"
+          >
+            🔐 {user.authProvider === "google" ? "Set a Password" : "Change Password"}
+          </Link>
+        </div>
 
         {/* Pets section */}
         <div>

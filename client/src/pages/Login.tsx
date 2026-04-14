@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../store";
 import { login, clearError, googleLogin, setUser } from "../store/authSlice";
-import { signInWithGoogle, resendVerificationEmail } from "../services/authService";
+import { signInWithGoogle, resendVerificationEmail, sendForgotPasswordEmail } from "../services/authService";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth } from "../lib/firebase";
 import type { IUser } from "../types";
@@ -28,12 +28,44 @@ const Login = () => {
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
+  // Forgot password
+  const [showForgotPass, setShowForgotPass] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalError(null);
     setEmailNotVerified(false);
     setResent(false);
+    setShowForgotPass(false);
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleForgotPassword = async (e?: React.FormEvent | React.MouseEvent | unknown) => {
+    if (e && typeof (e as React.FormEvent).preventDefault === "function") {
+      (e as React.FormEvent).preventDefault();
+    }
+    if (!forgotEmail.trim()) { setForgotError("Please enter your email address."); return; }
+    setForgotError(null);
+    setForgotSent(false);
+    setForgotLoading(true);
+    try {
+      await sendForgotPasswordEmail(forgotEmail.trim());
+      setForgotSent(true);
+    } catch (err: unknown) {
+      const e = err as { code?: string };
+      if (e.code === "auth/user-not-found" || e.code === "auth/invalid-email") {
+        setForgotError("No account found with that email address.");
+      } else if (e.code === "auth/too-many-requests") {
+        setForgotError("Too many requests. Please wait a few minutes.");
+      } else {
+        setForgotError("Could not send reset email. Please try again.");
+      }
+    } finally {
+      setForgotLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -245,7 +277,57 @@ const Login = () => {
                   value={form.password} onChange={handleChange} required autoComplete="current-password"
                   className="w-full border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white transition-all"
                 />
+                {/* Forgot password link */}
+                <div className="flex justify-end mt-1.5">
+                  <button
+                    type="button"
+                    onClick={() => { setShowForgotPass((s) => !s); setForgotSent(false); setForgotError(null); }}
+                    className="text-xs text-purple-600 hover:underline font-medium"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
               </div>
+
+              {/* Inline forgot-password — NOT a form (can't nest forms in HTML) */}
+              {showForgotPass && (
+                <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4">
+                  {forgotSent ? (
+                    <div className="flex items-start gap-2 text-green-700 text-sm">
+                      <span>✅</span>
+                      <div>
+                        <p className="font-semibold">Reset email sent!</p>
+                        <p className="text-xs text-green-600 mt-0.5">Check your inbox and follow the link to reset your password.</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-xs font-semibold text-purple-700">Enter your email to receive a reset link:</p>
+                      {forgotError && (
+                        <p className="text-xs text-red-500">⚠️ {forgotError}</p>
+                      )}
+                      <input
+                        type="email"
+                        value={forgotEmail}
+                        onChange={(e) => { setForgotEmail(e.target.value); setForgotError(null); }}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleForgotPassword(e as unknown as React.FormEvent); } }}
+                        placeholder="you@example.com"
+                        autoComplete="email"
+                        className="w-full border border-purple-200 bg-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleForgotPassword}
+                        disabled={forgotLoading || !forgotEmail.trim()}
+                        className="w-full bg-purple-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-all"
+                      >
+                        {forgotLoading ? "Sending..." : "Send Reset Link"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <button
                 type="submit" disabled={isLoading}
                 className="w-full bg-gradient-to-r from-purple-600 to-violet-500 text-white py-3 rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-all shadow-md shadow-purple-200 mt-2"
