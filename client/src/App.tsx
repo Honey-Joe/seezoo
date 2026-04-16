@@ -4,7 +4,6 @@ import { useAppDispatch, useAppSelector } from "./store";
 import { fetchMe, logout } from "./store/authSlice";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Sidebar from "./components/Sidebar";
-import { connectSocket, disconnectSocket } from "./services/socketService";
 
 import Login           from "./pages/Login";
 import Register        from "./pages/Register";
@@ -22,18 +21,15 @@ import ResetPassword   from "./pages/ResetPassword";
 import ChangePassword  from "./pages/ChangePassword";
 import Search          from "./pages/Search";
 import UserProfile     from "./pages/UserProfile";
-import Messages        from "./pages/Messages";
 
-/* Routes that use the sidebar layout instead of the top navbar */
-const SIDEBAR_ROUTES = ["/feed", "/search", "/lost-found", "/messages", "/profile", "/settings", "/new-post", "/new-lost-found", "/lost-found-seeall", "/u/"];
+const SIDEBAR_ROUTES = ["/feed", "/search", "/lost-found", "/profile", "/settings", "/new-post", "/new-lost-found", "/lost-found-seeall", "/u/"];
 
 const Navbar = () => {
-  const dispatch = useAppDispatch();
-  const user     = useAppSelector((s) => s.auth.user);
+  const dispatch     = useAppDispatch();
+  const user         = useAppSelector((s) => s.auth.user);
   const { pathname } = useLocation();
 
-  const isSidebarPage = SIDEBAR_ROUTES.some((r) => pathname.startsWith(r));
-  if (isSidebarPage) return null;
+  if (SIDEBAR_ROUTES.some((r) => pathname.startsWith(r))) return null;
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-purple-100 shadow-sm">
@@ -79,9 +75,8 @@ const Navbar = () => {
   );
 };
 
-/* Wrapper that adds the sidebar for authenticated app pages */
 const SidebarLayout = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex min-h-[calc(100vh-0px)]">
+  <div className="flex min-h-screen">
     <Sidebar />
     <div className="flex-1 min-w-0 bg-gradient-to-b from-purple-50 to-white">
       {children}
@@ -91,14 +86,8 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => (
 
 const App = () => {
   const dispatch = useAppDispatch();
-  const user     = useAppSelector((s) => s.auth.user);
 
   useEffect(() => { dispatch(fetchMe()); }, [dispatch]);
-
-  useEffect(() => {
-    if (user) connectSocket();
-    else disconnectSocket();
-  }, [user]);
 
   return (
     <BrowserRouter>
@@ -106,68 +95,25 @@ const App = () => {
       <main className="flex-1">
         <Routes>
           {/* Public */}
-          <Route path="/"              element={<Landing />} />
-          <Route path="/login"         element={<Login />} />
-          <Route path="/register"      element={<Register />} />
+          <Route path="/"               element={<Landing />} />
+          <Route path="/login"          element={<Login />} />
+          <Route path="/register"       element={<Register />} />
           <Route path="/setup-username" element={<SetupUsername />} />
-          <Route path="/verify-email"  element={<VerifyEmail />} />
+          <Route path="/verify-email"   element={<VerifyEmail />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/change-password" element={<ChangePassword />} />
 
           {/* Sidebar pages — protected */}
-          <Route path="/feed" element={
-            <ProtectedRoute>
-              <SidebarLayout><Feed /></SidebarLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <SidebarLayout><Profile /></SidebarLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <SidebarLayout><UpdateProfile /></SidebarLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/new-post" element={
-            <ProtectedRoute>
-              <SidebarLayout><NewPost /></SidebarLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/new-lost-found" element={
-            <ProtectedRoute>
-              <SidebarLayout><NewLostFound /></SidebarLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/lost-found" element={
-            <ProtectedRoute>
-              <SidebarLayout><LostFound /></SidebarLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/lost-found-seeall" element={
-            <ProtectedRoute>
-              <SidebarLayout><LostFoundSeeAll /></SidebarLayout>
-            </ProtectedRoute>
-          } />
+          <Route path="/feed" element={<ProtectedRoute><SidebarLayout><Feed /></SidebarLayout></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><SidebarLayout><Profile /></SidebarLayout></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><SidebarLayout><UpdateProfile /></SidebarLayout></ProtectedRoute>} />
+          <Route path="/new-post" element={<ProtectedRoute><SidebarLayout><NewPost /></SidebarLayout></ProtectedRoute>} />
+          <Route path="/new-lost-found" element={<ProtectedRoute><SidebarLayout><NewLostFound /></SidebarLayout></ProtectedRoute>} />
+          <Route path="/lost-found" element={<ProtectedRoute><SidebarLayout><LostFound /></SidebarLayout></ProtectedRoute>} />
+          <Route path="/lost-found-seeall" element={<ProtectedRoute><SidebarLayout><LostFoundSeeAll /></SidebarLayout></ProtectedRoute>} />
+          <Route path="/search" element={<ProtectedRoute><SidebarLayout><Search /></SidebarLayout></ProtectedRoute>} />
+          <Route path="/u/:username" element={<ProtectedRoute><SidebarLayout><UserProfile /></SidebarLayout></ProtectedRoute>} />
 
-          <Route path="/search" element={
-            <ProtectedRoute>
-              <SidebarLayout><Search /></SidebarLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/u/:username" element={
-            <ProtectedRoute>
-              <SidebarLayout><UserProfile /></SidebarLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/messages" element={
-            <ProtectedRoute>
-              <SidebarLayout><Messages /></SidebarLayout>
-            </ProtectedRoute>
-          } />
-
-          {/* Redirect logged-in root to feed */}
           <Route path="*" element={<Navigate to="/feed" replace />} />
         </Routes>
       </main>
