@@ -23,6 +23,7 @@ export interface IUser extends Document {
   pets: IPet[];
   followers: mongoose.Types.ObjectId[];
   following: mongoose.Types.ObjectId[];
+  followRequests: mongoose.Types.ObjectId[];
   isPrivate: boolean;
   createdAt: Date;
   comparePassword(candidate: string): Promise<boolean>;
@@ -77,6 +78,7 @@ const userSchema = new Schema<IUser>(
     pets: { type: [petSchema], default: [] },
     followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    followRequests: [{ type: Schema.Types.ObjectId, ref: "User" }],
     isPrivate: { type: Boolean, default: false },
   },
   { timestamps: true }

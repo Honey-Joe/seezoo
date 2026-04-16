@@ -171,8 +171,12 @@ export const logout = (_req: Request, res: Response): void => {
     .json({ message: "Logged out" });
 };
 
-export const getMe = (req: AuthRequest, res: Response): void => {
-  res.json(req.user);
+export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
+  const user = await User.findById(req.user!._id)
+    .select("-password")
+    .populate("followRequests", "name username profileImage")
+    .lean();
+  res.json(user);
 };
 
 // ─── Google OAuth ─────────────────────────────────────────────────────────────

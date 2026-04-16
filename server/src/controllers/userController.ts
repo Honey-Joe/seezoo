@@ -133,3 +133,140 @@ export const deletePet = async (req: AuthRequest, res: Response): Promise<void> 
 
   res.json(user);
 };
+
+/* ── get followers list ── */
+export const getFollowers = async (req: AuthRequest, res: Response): Promise<void> => {
+  const userId = req.params.userId as string;
+  if (!mongoose.Types.ObjectId.isValid(userId)) { res.status(400).json({ message: "Invalid user ID" }); return; }
+  const user = await User.findById(userId).populate("followers", "name username profileImage").lean();
+  if (!user) { res.status(404).json({ message: "User not found" }); return; }
+  res.json(user.followers);
+};
+
+/* ── get following list ── */
+export const getFollowing = async (req: AuthRequest, res: Response): Promise<void> => {
+  const userId = req.params.userId as string;
+  if (!mongoose.Types.ObjectId.isValid(userId)) { res.status(400).json({ message: "Invalid user ID" }); return; }
+  const user = await User.findById(userId).populate("following", "name username profileImage").lean();
+  if (!user) { res.status(404).json({ message: "User not found" }); return; }
+  res.json(user.following);
+};
+
+/* ── remove a follower (owner kicks someone out) ── */
+export const removeFollower = async (req: AuthRequest, res: Response): Promise<void> => {
+  const followerId = req.params.userId as string;
+  const myId       = req.user!._id.toString();
+  if (!mongoose.Types.ObjectId.isValid(followerId)) { res.status(400).json({ message: "Invalid user ID" }); return; }
+  await Promise.all([
+    User.findByIdAndUpdate(myId,       { $pull: { followers: followerId } }),
+    User.findByIdAndUpdate(followerId, { $pull: { following: myId } }),
+  ]);
+  res.json({ message: "Follower removed" });
+};
+
+/* ── follow ── */
+export const followUser = async (req: AuthRequest, res: Response): Promise<void> => {
+  const targetId = req.params.userId as string;
+  const myId     = req.user!._id.toString();
+
+  if (targetId === myId) { res.status(400).json({ message: "Cannot follow yourself" }); return; }
+  if (!mongoose.Types.ObjectId.isValid(targetId)) { res.status(400).json({ message: "Invalid user ID" }); return; }
+
+  const target = await User.findById(targetId);
+  if (!target) { res.status(404).json({ message: "User not found" }); return; }
+
+  if (target.isPrivate) {
+    // Already following — nothing to do
+    if (target.followers.map((id) => id.toString()).includes(myId)) {
+      res.json({ message: "Already following" }); return;
+    }
+    await User.findByIdAndUpdate(targetId, { $addToSet: { followRequests: myId } });
+    res.json({ message: "Follow request sent" });
+  } else {
+    await Promise.all([
+      User.findByIdAndUpdate(myId,     { $addToSet: { following: targetId } }),
+      User.findByIdAndUpdate(targetId, { $addToSet: { followers: myId } }),
+    ]);
+    res.json({ message: "Followed" });
+  }
+};
+
+/* ── unfollow / cancel request ── */
+export const unfollowUser = async (req: AuthRequest, res: Response): Promise<void> => {
+  const targetId = req.params.userId as string;
+  const myId     = req.user!._id.toString();
+
+  if (!mongoose.Types.ObjectId.isValid(targetId)) { res.status(400).json({ message: "Invalid user ID" }); return; }
+
+  await Promise.all([
+    User.findByIdAndUpdate(myId,      { $pull: { following: targetId } }),
+    User.findByIdAndUpdate(targetId,  { $pull: { followers: myId, followRequests: myId } }),
+  ]);
+  res.json({ message: "Unfollowed" });
+};
+
+/* ── accept follow request ── */
+export const acceptFollowRequest = async (req: AuthRequest, res: Response): Promise<void> => {
+  const requesterId = req.params.userId as string;
+  const myId        = req.user!._id.toString();
+
+  if (!mongoose.Types.ObjectId.isValid(requesterId)) { res.status(400).json({ message: "Invalid user ID" }); return; }
+
+  const me = await User.findById(myId);
+  if (!me) { res.status(404).json({ message: "User not found" }); return; }
+
+  const hasPending = me.followRequests.map((id) => id.toString()).includes(requesterId);
+  if (!hasPending) { res.status(400).json({ message: "No pending request from this user" }); return; }
+
+  await Promise.all([
+    User.findByIdAndUpdate(myId,        { $pull: { followRequests: requesterId }, $addToSet: { followers: requesterId } }),
+    User.findByIdAndUpdate(requesterId, { $addToSet: { following: myId } }),
+  ]);
+  res.json({ message: "Follow request accepted" });
+};
+
+/* ── decline follow request ── */
+export const declineFollowRequest = async (req: AuthRequest, res: Response): Promise<void> => {
+  const requesterId = req.params.userId as string;
+  const myId        = req.user!._id.toString();
+
+  if (!mongoose.Types.ObjectId.isValid(requesterId)) { res.status(400).json({ message: "Invalid user ID" }); return; }
+
+  await User.findByIdAndUpdate(myId, { $pull: { followRequests: requesterId } });
+  res.json({ message: "Follow request declined" });
+};
+
+/* ── public profile by username ── */
+export const getUserProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+  const user = await User.findOne({ username: req.params.username })
+    .select("-password -googleId -email")
+    .populate("followRequests", "name username profileImage")
+    .lean();
+  if (!user) { res.status(404).json({ message: "User not found" }); return; }
+
+  const myId = req.user!._id.toString();
+  const isOwner = user._id.toString() === myId;
+
+  // Only expose followRequests to the profile owner
+  const result = isOwner ? user : { ...user, followRequests: undefined };
+  res.json(result);
+};
+
+/* ── search users ── */
+export const searchUsers = async (req: AuthRequest, res: Response): Promise<void> => {
+  const q = (req.query.q as string)?.trim();
+  if (!q) { res.json([]); return; }
+
+  const users = await User.find({
+    $or: [
+      { username: { $regex: q, $options: "i" } },
+      { name:     { $regex: q, $options: "i" } },
+    ],
+    _id: { $ne: req.user!._id },
+  })
+    .select("name username profileImage bio followers")
+    .limit(20)
+    .lean();
+
+  res.json(users);
+};

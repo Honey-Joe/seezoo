@@ -18,6 +18,7 @@ export interface IUser {
   pets: IPet[];
   followers: string[];
   following: string[];
+  followRequests: IFollowRequester[];
   isPrivate: boolean;
   isEmailVerified: boolean;
   authProvider: "local" | "google";
@@ -40,6 +41,13 @@ export interface ApiError {
   message: string;
 }
 
+export interface IComment {
+  _id: string;
+  user: { _id: string; name: string; username: string; profileImage?: string };
+  text: string;
+  createdAt: string;
+}
+
 export interface IPost {
   _id: string;
   user: string;
@@ -48,8 +56,46 @@ export interface IPost {
   location?: string;
   petTags: string[];
   commentsEnabled: boolean;
+  likes: string[];
+  comments: IComment[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface IFollowRequester {
+  _id: string;
+  name: string;
+  username: string;
+  profileImage?: string;
+}
+
+export interface IPublicUser {
+  _id: string;
+  name: string;
+  username: string;
+  profileImage?: string;
+  bio?: string;
+  pets: IPet[];
+  followers: string[];
+  following: string[];
+  followRequests?: IFollowRequester[]; // only present when viewing own profile
+  isPrivate: boolean;
+  createdAt: string;
+}
+
+export interface IDirectMessage {
+  _id: string;
+  sender: string;
+  receiver: string;
+  text: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface IConversation {
+  partner: IFollowRequester;
+  lastMessage: IDirectMessage;
+  unread: number;
 }
 
 export type ReportType  = "lost" | "found";

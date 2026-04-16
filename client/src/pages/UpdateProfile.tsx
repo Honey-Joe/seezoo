@@ -176,7 +176,7 @@ const UpdateProfile = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-purple-50 to-white pb-16">
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white pb-16">
       {/* Banner */}
       <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 h-36 relative">
         <Link
