@@ -123,18 +123,18 @@ const UserProfile = () => {
           <div className="w-28 h-28 rounded-2xl border-4 border-white shadow-xl overflow-hidden bg-gradient-to-br from-purple-400 to-violet-600 flex items-center justify-center text-white text-4xl font-bold shrink-0">
             {profile.profileImage
               ? <img src={profile.profileImage} alt={profile.name} className="w-full h-full object-cover" />
-              : profile.name.charAt(0).toUpperCase()
+              : <div className="my-5">{profile.name.charAt(0).toUpperCase()}</div> 
             }
           </div>
 
           <div className="flex-1 pb-1">
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h1 className="text-2xl font-bold text-gray-900">{profile.name}</h1>
+            <div className="flex flex-wrap items-center gap-2 mb-1 mt-10">
+              <h1 className="text-2xl font-bold text-gray-900 pt-5">{profile.name}</h1>
               {profile.isPrivate && (
                 <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">🔒 Private</span>
               )}
             </div>
-            <p className="text-purple-600 font-medium text-sm mb-1">@{profile.username}</p>
+            <p className="text-purple-600 font-medium text-sm mt-2">@{profile.username}</p>
             {profile.bio && <p className="text-gray-600 text-sm max-w-md">{profile.bio}</p>}
           </div>
 

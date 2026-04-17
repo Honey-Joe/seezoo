@@ -48,20 +48,21 @@ const Profile = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white pb-16">
+      <div className="min-h-screen  from-purple-50 to-white pb-16">
 
       {/* Banner */}
-      <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 h-44 relative">
-        <div className="absolute top-4 right-4 flex items-center gap-2">
+      {/* <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 h-44 relative">
+      </div> */}
+        <div className=" py-10 flex items-centee justify-end px-5 je gap-2">
           <Link to="/new-post"
-            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all border border-white/30">
+            className="flex items-center gap-2 bg-black hover:bg-white/30 backdrop-blur text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all border border-white/30">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 5v14M5 12h14" />
             </svg>
             New Post
           </Link>
           <Link to="/settings"
-            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all border border-white/30">
+            className="flex items-center gap-2 bg-black hover:bg-white/30 backdrop-blur text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all border border-white/30">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
@@ -69,7 +70,6 @@ const Profile = () => {
             Settings
           </Link>
         </div>
-      </div>
 
       <div className="max-w-3xl mx-auto px-4">
 

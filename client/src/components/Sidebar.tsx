@@ -57,7 +57,7 @@ const Sidebar = () => {
   return (
     <>
       {/* ── Desktop sidebar ── */}
-      <aside className="hidden lg:flex flex-col w-60 shrink-0 sticky top-16 h-[calc(100vh-4rem)] border-r border-purple-100 bg-white px-3 py-6 gap-1">
+      <aside className="hidden lg:flex h-screen  flex-col w-60 shrink-0 sticky top-16 h-[calc(100vh-4rem)] border-r border-purple-100 bg-white px-3 py-6 gap-1">
         {/* Logo */}
         <div className="flex items-center gap-2 px-3 mb-6">
           <span className="text-2xl">🐾</span>

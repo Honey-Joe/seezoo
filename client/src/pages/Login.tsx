@@ -279,13 +279,13 @@ const Login = () => {
                 />
                 {/* Forgot password link */}
                 <div className="flex justify-end mt-1.5">
-                  <button
+                  {/* <button
                     type="button"
                     onClick={() => { setShowForgotPass((s) => !s); setForgotSent(false); setForgotError(null); }}
                     className="text-xs text-purple-600 hover:underline font-medium"
                   >
                     Forgot password?
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
