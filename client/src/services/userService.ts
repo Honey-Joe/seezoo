@@ -47,3 +47,6 @@ export const getFollowing           = (userId: string)     => api.get<IFollowReq
 export const getUserProfile         = (usernameOrId: string) => api.get<IPublicUser>(`/user/${usernameOrId}`);
 export const searchUsers            = (q: string)          => api.get<IPublicUser[]>(`/user/search?q=${encodeURIComponent(q)}`);
 export const getUserById            = (userId: string)     => api.get<{ _id: string; name: string; username: string; profileImage?: string }>(`/user/id/${userId}`);
+export const blockUserByUser        = (userId: string)     => api.post(`/user/${userId}/block`);
+export const unblockUserByUser      = (userId: string)     => api.post(`/user/${userId}/unblock`);
+export const reportPost             = (postId: string, reason: string) => api.post("/admin/reports", { postId, reason });

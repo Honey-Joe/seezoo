@@ -14,16 +14,19 @@ export interface IUser extends Document {
   name: string;
   username: string;
   email: string;
-  password?: string;           // optional — Google users have no password
-  googleId?: string;           // Google UID stored for reference
+  password?: string;
+  googleId?: string;
   authProvider: "local" | "google";
   isEmailVerified: boolean;
+  isBlocked: boolean;
+  role: "user" | "admin" | "superadmin";
   profileImage?: string;
   bio?: string;
   pets: IPet[];
   followers: mongoose.Types.ObjectId[];
   following: mongoose.Types.ObjectId[];
   followRequests: mongoose.Types.ObjectId[];
+  blockedUsers: mongoose.Types.ObjectId[];
   isPrivate: boolean;
   createdAt: Date;
   comparePassword(candidate: string): Promise<boolean>;
@@ -73,12 +76,15 @@ const userSchema = new Schema<IUser>(
       default: "local",
     },
     isEmailVerified: { type: Boolean, default: false },
+    isBlocked:       { type: Boolean, default: false },
+    role:            { type: String, enum: ["user", "admin", "superadmin"], default: "user" },
     profileImage: { type: String },
     bio: { type: String, maxlength: 300 },
     pets: { type: [petSchema], default: [] },
-    followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    following: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    followers:      [{ type: Schema.Types.ObjectId, ref: "User" }],
+    following:      [{ type: Schema.Types.ObjectId, ref: "User" }],
     followRequests: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    blockedUsers:   [{ type: Schema.Types.ObjectId, ref: "User" }],
     isPrivate: { type: Boolean, default: false },
   },
   { timestamps: true }

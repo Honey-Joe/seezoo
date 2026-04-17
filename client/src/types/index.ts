@@ -19,6 +19,7 @@ export interface IUser {
   followers: string[];
   following: string[];
   followRequests: IFollowRequester[];
+  blockedUsers: string[];
   isPrivate: boolean;
   isEmailVerified: boolean;
   authProvider: "local" | "google";

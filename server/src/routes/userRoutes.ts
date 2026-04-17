@@ -4,6 +4,7 @@ import {
   followUser, unfollowUser, getUserProfile, searchUsers,
   acceptFollowRequest, declineFollowRequest,
   getFollowers, getFollowing, removeFollower, getUserById,
+  blockUserByUser, unblockUserByUser,
 } from "../controllers/userController";
 import { verifyJWT } from "../middleware/authMiddleware";
 import upload from "../middleware/upload";
@@ -23,6 +24,8 @@ router.get("/:userId/following",                getFollowing);
 router.post("/:userId/follow",                  followUser);
 router.post("/:userId/unfollow",                unfollowUser);
 router.post("/:userId/remove-follower",         removeFollower);
+router.post("/:userId/block",                   blockUserByUser);
+router.post("/:userId/unblock",                 unblockUserByUser);
 router.post("/:userId/follow-requests/accept",  acceptFollowRequest);
 router.post("/:userId/follow-requests/decline", declineFollowRequest);
 

@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.ts"
+    "start": "node dist/server.ts",
+    "seed:admin": "ts-node src/seeds/adminSeed.ts",
+    "seed:users": "ts-node src/seeds/userSeed.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

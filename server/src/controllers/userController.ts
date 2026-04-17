@@ -283,3 +283,31 @@ export const getUserById = async (req: AuthRequest, res: Response): Promise<void
   if (!user) { res.status(404).json({ message: "User not found" }); return; }
   res.json(user);
 };
+
+/* ── block a user ── */
+export const blockUserByUser = async (req: AuthRequest, res: Response): Promise<void> => {
+  const targetId = req.params.userId as string;
+  const myId     = req.user!._id.toString();
+
+  if (targetId === myId) { res.status(400).json({ message: "Cannot block yourself" }); return; }
+  if (!mongoose.Types.ObjectId.isValid(targetId)) { res.status(400).json({ message: "Invalid user ID" }); return; }
+
+  await Promise.all([
+    User.findByIdAndUpdate(myId, { $addToSet: { blockedUsers: targetId }, $pull: { followers: targetId, following: targetId } }),
+    User.findByIdAndUpdate(targetId, { $pull: { followers: myId, following: myId } }),
+  ]);
+
+  res.json({ message: "User blocked" });
+};
+
+/* ── unblock a user ── */
+export const unblockUserByUser = async (req: AuthRequest, res: Response): Promise<void> => {
+  const targetId = req.params.userId as string;
+  const myId     = req.user!._id.toString();
+
+  if (!mongoose.Types.ObjectId.isValid(targetId)) { res.status(400).json({ message: "Invalid user ID" }); return; }
+
+  await User.findByIdAndUpdate(myId, { $pull: { blockedUsers: targetId } });
+
+  res.json({ message: "User unblocked" });
+};
