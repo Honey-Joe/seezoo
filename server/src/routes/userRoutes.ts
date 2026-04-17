@@ -3,7 +3,7 @@ import {
   updateProfile, addPet, updatePet, deletePet,
   followUser, unfollowUser, getUserProfile, searchUsers,
   acceptFollowRequest, declineFollowRequest,
-  getFollowers, getFollowing, removeFollower,
+  getFollowers, getFollowing, removeFollower, getUserById,
 } from "../controllers/userController";
 import { verifyJWT } from "../middleware/authMiddleware";
 import upload from "../middleware/upload";
@@ -16,6 +16,7 @@ router.post("/pets",                            upload.single("petImage"), addPe
 router.put("/pets/:petId",                      upload.single("petImage"), updatePet);
 router.delete("/pets/:petId",                   deletePet);
 router.get("/search",                           searchUsers);
+router.get("/id/:userId",                       getUserById);
 router.get("/:username",                        getUserProfile);
 router.get("/:userId/followers",                getFollowers);
 router.get("/:userId/following",                getFollowing);

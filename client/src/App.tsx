@@ -21,8 +21,9 @@ import ResetPassword   from "./pages/ResetPassword";
 import ChangePassword  from "./pages/ChangePassword";
 import Search          from "./pages/Search";
 import UserProfile     from "./pages/UserProfile";
+import Messages        from "./pages/Messages";
 
-const SIDEBAR_ROUTES = ["/feed", "/search", "/lost-found", "/profile", "/settings", "/new-post", "/new-lost-found", "/lost-found-seeall", "/u/"];
+const SIDEBAR_ROUTES = ["/feed", "/search", "/lost-found", "/messages", "/profile", "/settings", "/new-post", "/new-lost-found", "/lost-found-seeall", "/u/"];
 
 const Navbar = () => {
   const dispatch     = useAppDispatch();
@@ -113,6 +114,7 @@ const App = () => {
           <Route path="/lost-found-seeall" element={<ProtectedRoute><SidebarLayout><LostFoundSeeAll /></SidebarLayout></ProtectedRoute>} />
           <Route path="/search" element={<ProtectedRoute><SidebarLayout><Search /></SidebarLayout></ProtectedRoute>} />
           <Route path="/u/:username" element={<ProtectedRoute><SidebarLayout><UserProfile /></SidebarLayout></ProtectedRoute>} />
+          <Route path="/messages" element={<ProtectedRoute><SidebarLayout><Messages /></SidebarLayout></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/feed" replace />} />
         </Routes>

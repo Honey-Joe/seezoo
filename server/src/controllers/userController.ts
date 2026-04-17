@@ -270,3 +270,16 @@ export const searchUsers = async (req: AuthRequest, res: Response): Promise<void
 
   res.json(users);
 };
+
+/* ── get user by MongoDB _id (used by messages to resolve partner info) ── */
+export const getUserById = async (req: AuthRequest, res: Response): Promise<void> => {
+  const { userId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(userId as string)) {
+    res.status(400).json({ message: "Invalid ID" }); return;
+  }
+  const user = await User.findById(userId)
+    .select("name username profileImage")
+    .lean();
+  if (!user) { res.status(404).json({ message: "User not found" }); return; }
+  res.json(user);
+};

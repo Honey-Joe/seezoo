@@ -46,3 +46,4 @@ export const getFollowers           = (userId: string)     => api.get<IFollowReq
 export const getFollowing           = (userId: string)     => api.get<IFollowRequester[]>(`/user/${userId}/following`);
 export const getUserProfile         = (usernameOrId: string) => api.get<IPublicUser>(`/user/${usernameOrId}`);
 export const searchUsers            = (q: string)          => api.get<IPublicUser[]>(`/user/search?q=${encodeURIComponent(q)}`);
+export const getUserById            = (userId: string)     => api.get<{ _id: string; name: string; username: string; profileImage?: string }>(`/user/id/${userId}`);

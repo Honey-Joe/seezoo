@@ -83,6 +83,25 @@ export interface IPublicUser {
   createdAt: string;
 }
 
+export interface IDirectMessage {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  text: string;
+  createdAt: number; // Unix ms timestamp
+  read: boolean;
+}
+
+export interface IConversation {
+  partnerId: string;
+  partnerName: string;
+  partnerUsername: string;
+  partnerImage?: string;
+  lastMessage: string;
+  lastAt: number;
+  unread: number;
+}
+
 export type ReportType  = "lost" | "found";
 export type PetSize     = "tiny" | "small" | "medium" | "large" | "extra-large";
 export type PetGender   = "male" | "female" | "unknown";
