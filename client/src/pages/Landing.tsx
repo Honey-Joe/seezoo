@@ -99,18 +99,18 @@ const STEPS = [
 ];
 
 const MARQUEE_ITEMS = [
-  "🐶 Buddy · 2K followers",
-  "🐱 Luna · 18K followers",
-  "🐰 Coco · 4.5K followers",
-  "🦜 Kiwi · 890 followers",
-  "🐠 Nemo · 1.2K followers",
-  "🐶 Max · 34K followers",
-  "🐱 Mittens · 9K followers",
-  "🦎 Spike · 3.1K followers",
-  "🐹 Peanut · 2.4K followers",
-  "🐦 Tweety · 5.6K followers",
-  "🐰 Floppy · 7K followers",
-  "🐶 Charlie · 11K followers",
+  "🐶 Buddy",
+  "🐱 Luna ",
+  "🐰 Coco ",
+  "🦜 Kiwi ",
+  "🐠 Nemo ",
+  "🐶 Max ",
+  "🐱 Mittens",
+  "🦎 Spike ",
+  "🐹 Peanut ",
+  "🐦 Tweety ",
+  "🐰 Floppy",
+  "🐶 Charlie ",
 ];
 
 const FAKE_POSTS = [
@@ -268,7 +268,7 @@ const Landing = () => {
       {/* ══════════════════════════════════════════
           STATS
       ══════════════════════════════════════════ */}
-      <section className="bg-white py-16 px-4">
+      {/* <section className="bg-white py-16 px-4">
         <div className="max-w-5xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6">
           {STATS.map((s, i) => (
             <div key={i} className={`text-center animate-count-up delay-${(i + 1) * 200}`}>
@@ -280,7 +280,7 @@ const Landing = () => {
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* ══════════════════════════════════════════
           FEATURES
