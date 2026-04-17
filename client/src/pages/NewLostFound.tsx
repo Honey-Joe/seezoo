@@ -149,7 +149,7 @@ const NewLostFound = () => {
     <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-amber-50 to-white">
 
       {/* ── Sticky header ── */}
-      <div className="sticky top-16 z-30 bg-white/90 backdrop-blur border-b border-amber-100 shadow-sm">
+      <div className="sticky  z-30 bg-white/90 backdrop-blur border-b border-amber-100 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
