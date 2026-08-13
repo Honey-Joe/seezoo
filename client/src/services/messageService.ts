@@ -1,29 +1,5 @@
-import {
-  ref, push, set, onValue, off,
-  serverTimestamp, update, get,
-} from "firebase/database";
 import api from "./api";
-import { db } from "../lib/firebase";
 import type { IDirectMessage, IConversation } from "../types";
-
-const convoId = (a: string, b: string) => [a, b].sort().join("_");
-
-/* ── fetch user info from our API and patch RTDB node ── */
-const enrichConvo = async (myId: string, partnerId: string): Promise<{ name: string; username: string; profileImage?: string }> => {
-  try {
-    const res = await api.get<{ _id: string; name: string; username: string; profileImage?: string }>(`/user/id/${partnerId}`);
-    const u = res.data;
-    // Patch RTDB so future loads don't need to fetch again
-    await update(ref(db, `conversations/${myId}/${partnerId}`), {
-      partnerName:     u.name,
-      partnerUsername: u.username,
-      ...(u.profileImage ? { partnerImage: u.profileImage } : {}),
-    });
-    return { name: u.name, username: u.username, profileImage: u.profileImage };
-  } catch {
-    return { name: partnerId.slice(0, 8), username: partnerId.slice(0, 8) };
-  }
-};
 
 /* ── send a message ── */
 export const sendMessage = async (
@@ -37,101 +13,66 @@ export const sendMessage = async (
   receiverUsername: string,
   receiverImage: string | undefined,
 ): Promise<void> => {
-  const cid    = convoId(senderId, receiverId);
-  const msgRef = push(ref(db, `messages/${cid}`));
-
-  await set(msgRef, {
-    id: msgRef.key!,
-    senderId,
-    receiverId,
-    text: text.trim(),
-    createdAt: Date.now(),
-    read: false,
+  await api.post("/messages", {
+    senderId, receiverId, text,
+    senderName, senderUsername, senderImage,
+    receiverName, receiverUsername, receiverImage,
   });
-
-  const unreadSnap = await get(ref(db, `conversations/${receiverId}/${senderId}/unread`));
-  const unread = ((unreadSnap.val() as number) ?? 0) + 1;
-
-  await Promise.all([
-    update(ref(db, `conversations/${senderId}/${receiverId}`), {
-      partnerId:       receiverId,
-      partnerName:     receiverName,
-      partnerUsername: receiverUsername,
-      ...(receiverImage ? { partnerImage: receiverImage } : {}),
-      lastMessage: text.trim(),
-      lastAt:      serverTimestamp(),
-      unread:      0,
-    }),
-    update(ref(db, `conversations/${receiverId}/${senderId}`), {
-      partnerId:       senderId,
-      partnerName:     senderName,
-      partnerUsername: senderUsername,
-      ...(senderImage ? { partnerImage: senderImage } : {}),
-      lastMessage: text.trim(),
-      lastAt:      serverTimestamp(),
-      unread,
-    }),
-  ]);
 };
 
-/* ── listen to messages ── */
+/* ── get messages between two users ── */
+export const getMessages = async (
+  partnerId: string,
+): Promise<IDirectMessage[]> => {
+  const res = await api.get<IDirectMessage[]>(`/messages/${partnerId}`);
+  return res.data;
+};
+
+/* ── get conversation list ── */
+export const getConversations = async (): Promise<IConversation[]> => {
+  const res = await api.get<IConversation[]>("/messages");
+  return res.data;
+};
+
+/* ── mark conversation as read ── */
+export const markRead = async (partnerId: string): Promise<void> => {
+  await api.patch(`/messages/${partnerId}/read`);
+};
+
+/* ── poll-based listeners (replaces Firebase onValue) ── */
 export const listenMessages = (
-  myId: string,
+  _myId: string,
   partnerId: string,
   callback: (msgs: IDirectMessage[]) => void
 ): (() => void) => {
-  const path    = `messages/${convoId(myId, partnerId)}`;
-  const msgsRef = ref(db, path);
+  let active = true;
 
-  const handler = onValue(
-    msgsRef,
-    (snap) => {
-      const msgs: IDirectMessage[] = [];
-      snap.forEach((child) => {
-        const val = child.val();
-        if (val) msgs.push({ ...val, id: child.key! });
-      });
-      msgs.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
-      callback(msgs);
-    },
-    (error) => {
-      console.error("listenMessages error:", error);
-    }
-  );
+  const poll = async () => {
+    try {
+      const msgs = await getMessages(partnerId);
+      if (active) callback(msgs);
+    } catch { /* silent */ }
+  };
 
-  // Return unsubscribe — use the same ref instance
-  return () => off(msgsRef, "value", handler);
+  poll();
+  const interval = setInterval(poll, 3000);
+  return () => { active = false; clearInterval(interval); };
 };
 
-/* ── mark read ── */
-export const markRead = (myId: string, partnerId: string): Promise<void> =>
-  update(ref(db, `conversations/${myId}/${partnerId}`), { unread: 0 });
-
-/* ── listen to conversations — auto-enriches missing partner info ── */
 export const listenConversations = (
-  myId: string,
+  _myId: string,
   callback: (convos: IConversation[]) => void
 ): (() => void) => {
-  const convosRef = ref(db, `conversations/${myId}`);
+  let active = true;
 
-  const handler = onValue(convosRef, async (snap) => {
-    const raw: IConversation[] = [];
-    snap.forEach((child) => {
-      raw.push({ ...(child.val() as IConversation), partnerId: child.key! });
-    });
+  const poll = async () => {
+    try {
+      const convos = await getConversations();
+      if (active) callback(convos);
+    } catch { /* silent */ }
+  };
 
-    // Enrich any convos missing partnerName in parallel
-    const enriched = await Promise.all(
-      raw.map(async (c) => {
-        if (c.partnerName && c.partnerUsername) return c;
-        const info = await enrichConvo(myId, c.partnerId);
-        return { ...c, partnerName: info.name, partnerUsername: info.username, partnerImage: info.profileImage ?? c.partnerImage };
-      })
-    );
-
-    enriched.sort((a, b) => (b.lastAt ?? 0) - (a.lastAt ?? 0));
-    callback(enriched);
-  });
-
-  return () => off(convosRef, "value", handler);
+  poll();
+  const interval = setInterval(poll, 5000);
+  return () => { active = false; clearInterval(interval); };
 };

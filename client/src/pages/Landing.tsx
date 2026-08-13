@@ -554,7 +554,7 @@ const Landing = () => {
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🐾</span>
-            <span className="text-white font-extrabold text-lg">Seezoo</span>
+            <span className="text-white font-extrabold text-lg">SeeZoo</span>
             <span className="text-gray-600 text-sm">— The Pet Social Network</span>
           </div>
           <div className="flex gap-6 text-sm">

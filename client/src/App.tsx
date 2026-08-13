@@ -38,7 +38,7 @@ const Navbar = () => {
         <Link to={user ? "/feed" : "/"} className="flex items-center gap-2">
           <span className="text-2xl">🐾</span>
           <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-violet-500 bg-clip-text text-transparent">
-            Seezoo
+            SeeZoo
           </span>
         </Link>
         <div className="flex items-center gap-3">

@@ -1,15 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { IUser } from "../types";
-import {
-  getMe,
-  loginUser,
-  logoutUser,
-  registerUser,
-  sendGoogleToken,
-} from "../services/authService";
-import { signOut } from "firebase/auth";
-import { auth } from "../lib/firebase";
+import { getMe, loginUser, logoutUser, registerUser } from "../services/authService";
 
 interface AuthState {
   user: IUser | null;
@@ -17,11 +9,7 @@ interface AuthState {
   error: string | null;
 }
 
-const initialState: AuthState = {
-  user: null,
-  loading: true,
-  error: null,
-};
+const initialState: AuthState = { user: null, loading: true, error: null };
 
 export const fetchMe = createAsyncThunk("auth/fetchMe", async () => {
   const res = await getMe();
@@ -43,10 +31,7 @@ export const login = createAsyncThunk(
 
 export const register = createAsyncThunk(
   "auth/register",
-  async (
-    data: { name: string; username: string; email: string; password: string },
-    { rejectWithValue }
-  ) => {
+  async (data: { name: string; username: string; email: string; password: string }, { rejectWithValue }) => {
     try {
       const res = await registerUser(data);
       return res.data;
@@ -59,104 +44,27 @@ export const register = createAsyncThunk(
 
 export const logout = createAsyncThunk("auth/logout", async () => {
   await logoutUser();
-  // Also sign out of Firebase so Google session is cleared
-  await signOut(auth).catch(() => {});
 });
-
-/**
- * googleLogin — used on both Login and Register pages.
- * Returns either:
- *  - A full IUser (logged in / account created)
- *  - A special object { needsRegistration, email, name } (login page, no account)
- *  - A special object { pendingGoogle, email, name, picture } (register page, needs username)
- */
-export const googleLogin = createAsyncThunk(
-  "auth/googleLogin",
-  async (
-    payload: { idToken: string; action: "login" | "register" },
-    { rejectWithValue }
-  ) => {
-    try {
-      const res = await sendGoogleToken(payload.idToken, payload.action);
-      return res.data;
-    } catch (err: unknown) {
-      const e = err as {
-        response?: { data?: { message?: string; needsRegistration?: boolean } };
-      };
-      // 404 with needsRegistration is expected on login — surface it
-      if (e.response?.data?.needsRegistration) {
-        return rejectWithValue({ needsRegistration: true, ...e.response.data });
-      }
-      return rejectWithValue(e.response?.data?.message || "Google sign-in failed");
-    }
-  }
-);
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setUser(state, action: PayloadAction<IUser>) {
-      state.user = action.payload;
-    },
-    clearError(state) {
-      state.error = null;
-    },
+    setUser(state, action: PayloadAction<IUser>) { state.user = action.payload; },
+    clearError(state) { state.error = null; },
   },
   extraReducers: (builder) => {
     builder
-      // fetchMe
-      .addCase(fetchMe.pending, (state) => { state.loading = true; })
-      .addCase(fetchMe.fulfilled, (state, action) => {
-        state.user = action.payload;
-        state.loading = false;
-      })
-      .addCase(fetchMe.rejected, (state) => {
-        state.user = null;
-        state.loading = false;
-      })
-      // login
-      .addCase(login.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(login.fulfilled, (state, action) => {
-        state.user = action.payload;
-        state.loading = false;
-      })
-      .addCase(login.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // register — server returns { verificationSent: true } NOT a user, so don't set user
-      .addCase(register.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(register.fulfilled, (state) => {
-        state.loading = false; // user stays null until email verified + login
-      })
-      .addCase(register.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // logout
-      .addCase(logout.fulfilled, (state) => {
-        state.user = null;
-      })
-      // googleLogin — only sets user if a full account is returned
-      .addCase(googleLogin.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(googleLogin.fulfilled, (state, action) => {
-        state.loading = false;
-        const data = action.payload as Record<string, unknown>;
-        // If it's a real user (has _id), store it; otherwise component handles redirect
-        if (data._id) {
-          state.user = action.payload as IUser;
-        }
-      })
-      .addCase(googleLogin.rejected, (state, action) => {
-        state.loading = false;
-        const payload = action.payload;
-        if (typeof payload === "object" && payload !== null && (payload as Record<string, unknown>).needsRegistration) {
-          state.error = null; // component handles redirect
-        } else {
-          state.error = (payload as string) || "Google sign-in failed";
-        }
-      });
+      .addCase(fetchMe.pending,    (s) => { s.loading = true; })
+      .addCase(fetchMe.fulfilled,  (s, a) => { s.user = a.payload; s.loading = false; })
+      .addCase(fetchMe.rejected,   (s) => { s.user = null; s.loading = false; })
+      .addCase(login.pending,      (s) => { s.loading = true; s.error = null; })
+      .addCase(login.fulfilled,    (s, a) => { s.user = a.payload; s.loading = false; })
+      .addCase(login.rejected,     (s, a) => { s.loading = false; s.error = a.payload as string; })
+      .addCase(register.pending,   (s) => { s.loading = true; s.error = null; })
+      .addCase(register.fulfilled, (s, a) => { s.user = a.payload; s.loading = false; })
+      .addCase(register.rejected,  (s, a) => { s.loading = false; s.error = a.payload as string; })
+      .addCase(logout.fulfilled,   (s) => { s.user = null; });
   },
 });
 
